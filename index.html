@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Bora num date? 💜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg-1:#f0521a;
+    --bg-2:#d63809;
+    --card:rgba(48,13,8,.74);
+    --card-solid:#3a1009;
+    --chip:rgba(28,8,5,.55);
+    --chip-sel:rgba(72,22,12,.85);
+    --btn-1:#ff7038;
+    --btn-2:#ff4a1c;
+    --ink:#fff4ec;
+    --ink-soft:rgba(255,239,231,.82);
+    --bubble:#ff6233;
+    --white:#ffffff;
+    --radius:26px;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;margin:0;}
+  body{
+    font-family:'Nunito',system-ui,sans-serif;
+    color:var(--ink);
+    background:radial-gradient(120% 95% at 50% 32%, var(--bg-1) 0%, var(--bg-2) 70%, #c33207 100%);
+    min-height:100dvh;
+    overflow:hidden;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* floating hearts layer */
+  #hearts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .heart{position:absolute;bottom:-60px;will-change:transform,opacity;opacity:0;}
+  @keyframes floatUp{
+    0%{transform:translateY(0) translateX(0) rotate(0deg);opacity:0;}
+    8%{opacity:.95;}
+    85%{opacity:.95;}
+    100%{transform:translateY(-115dvh) translateX(var(--sway)) rotate(var(--spin));opacity:0;}
+  }
+
+  /* app shell */
+  .app{
+    position:relative;z-index:1;
+    min-height:100dvh;
+    display:flex;align-items:center;justify-content:center;
+    padding:24px 20px;
+  }
+  .stage{width:100%;max-width:430px;}
+
+  .screen{display:none;animation:pop .5s cubic-bezier(.16,1,.3,1);}
+  .screen.active{display:block;}
+  @keyframes pop{from{opacity:0;transform:translateY(14px) scale(.97);}to{opacity:1;transform:none;}}
+
+  /* big emoji */
+  .emoji{
+    text-align:center;font-size:clamp(82px,26vw,118px);line-height:1;
+    margin:6px 0 4px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.28));
+    animation:bob 3.2s ease-in-out infinite;
+  }
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);}50%{transform:translateY(-12px) rotate(2deg);}}
+
+  /* speech bubble */
+  .bubble{
+    position:relative;display:block;width:max-content;max-width:80%;
+    margin:0 auto -10px;padding:11px 22px;
+    background:var(--bubble);color:#fff;font-family:'Fredoka';font-weight:600;
+    font-size:20px;letter-spacing:.5px;border-radius:30px;
+    box-shadow:0 8px 20px rgba(0,0,0,.28),inset 0 2px 0 rgba(255,255,255,.25);
+    z-index:3;
+  }
+  .bubble::after{
+    content:"";position:absolute;left:50%;bottom:-10px;transform:translateX(-50%);
+    border:11px solid transparent;border-top-color:var(--bubble);border-bottom:0;
+  }
+
+  /* cards */
+  .card{
+    background:var(--card);backdrop-filter:blur(3px);
+    border:1px solid rgba(255,255,255,.07);
+    border-radius:var(--radius);padding:26px 22px;
+    box-shadow:0 22px 50px rgba(0,0,0,.34);
+    text-align:center;
+  }
+  h1,h2{font-family:'Fredoka','Nunito',system-ui,sans-serif;font-weight:600;margin:0;letter-spacing:.4px;color:var(--ink);}
+  h1{font-size:clamp(26px,7vw,31px);line-height:1.18;text-shadow:0 3px 12px rgba(0,0,0,.3);}
+  .lead{font-family:'Fredoka';font-weight:500;font-size:clamp(21px,6vw,25px);line-height:1.25;margin:2px 0 18px;}
+  .sub{font-size:15px;color:var(--ink-soft);font-weight:700;margin:-10px 0 18px;}
+
+  /* buttons */
+  .btn{
+    appearance:none;border:0;cursor:pointer;width:100%;
+    font-family:'Fredoka';font-weight:600;font-size:21px;color:#fff;
+    padding:16px 22px;border-radius:40px;
+    background:linear-gradient(180deg,var(--btn-1),var(--btn-2));
+    box-shadow:0 10px 24px rgba(180,40,10,.5),inset 0 2px 0 rgba(255,255,255,.35);
+    transition:transform .12s ease,filter .12s ease,opacity .2s;
+    letter-spacing:.5px;
+  }
+  .btn:hover{filter:brightness(1.06);}
+  .btn:active{transform:translateY(2px) scale(.99);}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;filter:grayscale(.25);}
+  .btn.ghost{background:linear-gradient(180deg,#5a2114,#3f140b);box-shadow:0 8px 18px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.12);}
+
+  /* yes / no row */
+  #btnSim{width:auto;min-width:140px;padding:15px 46px;}
+  #btnNao{
+    width:auto;min-width:120px;padding:14px 34px;position:relative;z-index:2;
+    background:linear-gradient(180deg,#5a2114,#3f140b);
+    box-shadow:0 8px 18px rgba(0,0,0,.35),inset 0 2px 0 rgba(255,255,255,.12);
+    transition:transform .18s cubic-bezier(.16,1,.3,1),font-size .18s;
+  }
+  .yesno-grid{display:flex;gap:14px;justify-content:center;align-items:center;flex-wrap:wrap;min-height:64px;}
+
+  /* form fields */
+  .field{text-align:left;margin-bottom:16px;}
+  .field label{display:block;font-weight:800;font-size:15px;margin:0 0 8px 6px;color:var(--ink);}
+  .field input{
+    width:100%;border:0;border-radius:34px;padding:15px 22px;
+    font-family:'Fredoka';font-size:19px;font-weight:500;text-align:center;color:var(--ink);
+    background:var(--chip);box-shadow:inset 0 2px 8px rgba(0,0,0,.35);
+    color-scheme:dark;
+  }
+  .field input::-webkit-calendar-picker-indicator{filter:invert(.85) sepia(1) saturate(4) hue-rotate(-15deg);cursor:pointer;}
+
+  /* option grids */
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+  .grid.two{grid-template-columns:repeat(2,1fr);max-width:260px;margin-left:auto;margin-right:auto;}
+  .opt{
+    cursor:pointer;border:2px solid transparent;border-radius:18px;
+    background:var(--chip);padding:14px 6px 11px;text-align:center;
+    transition:transform .14s,border-color .14s,background .14s;
+  }
+  .opt:hover{transform:translateY(-3px);}
+  .opt .ico{font-size:34px;line-height:1;display:block;margin-bottom:6px;filter:drop-shadow(0 4px 7px rgba(0,0,0,.3));}
+  .opt .name{font-weight:800;font-size:13.5px;color:var(--ink);}
+  .opt.sel{border-color:#fff;background:var(--chip-sel);transform:translateY(-2px) scale(1.02);box-shadow:0 8px 18px rgba(0,0,0,.3);}
+
+  /* final summary */
+  .summary{text-align:left;margin-top:14px;font-weight:700;font-size:17px;}
+  .summary li{display:flex;gap:11px;align-items:center;padding:5px 0;}
+  .summary .e{font-size:21px;}
+  .final-lead{font-family:'Fredoka';font-weight:600;font-size:26px;line-height:1.2;text-align:center;}
+  .final-sub{text-align:center;font-weight:800;font-size:15px;color:var(--ink-soft);margin:6px 0 4px;}
+  ul{list-style:none;padding:0;margin:10px 0 0;}
+
+  @media (prefers-reduced-motion:reduce){
+    .emoji{animation:none;}
+    .screen{animation:none;}
+  }
+</style>
+</head>
+<body>
+<div id="hearts"></div>
+
+<div class="app">
+  <div class="stage">
+
+    <!-- 1. ASK -->
+    <section class="screen active" id="s-ask">
+      <div class="emoji">🥺</div>
+      <span class="bubble">PENSA BEM...</span>
+      <div class="card">
+        <h1>VOCÊ ACEITARIA IR<br>À UM DATE COMIGO?</h1>
+        <div class="yesno-grid" style="margin-top:18px">
+          <button class="btn ghost" id="btnNao">NÃO</button>
+          <button class="btn" id="btnSim">SIM</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. CONFIRM -->
+    <section class="screen" id="s-confirm">
+      <div class="emoji">😏🌹</div>
+      <div class="card">
+        <h1>VOCÊ DISSE SIM? 🥺</h1>
+        <p class="sub" style="margin-top:14px">Eu estava esperando você dizer não kkkk</p>
+        <button class="btn" data-next="s-when">PRÓXIMO 👆</button>
+      </div>
+    </section>
+
+    <!-- 3. WHEN -->
+    <section class="screen" id="s-when">
+      <div class="card">
+        <h1>📅 QUANDO VOCÊ TÁ LIVRE?</h1>
+        <div style="height:18px"></div>
+        <div class="field">
+          <label>Escolhe a data</label>
+          <input type="date" id="inDate" />
+        </div>
+        <div class="field">
+          <label>Escolhe o horário</label>
+          <input type="time" id="inTime" value="19:00" />
+        </div>
+        <button class="btn" id="btnWhen" disabled>SELECIONAR A DATA 💜</button>
+      </div>
+    </section>
+
+    <!-- 4. FOOD -->
+    <section class="screen" id="s-food">
+      <div class="card">
+        <h1>O QUE TÁ AFIM? 😋</h1>
+        <div style="height:18px"></div>
+        <div class="grid" id="foodGrid"></div>
+        <button class="btn" id="btnFood" disabled>BORA! 💜</button>
+      </div>
+    </section>
+
+    <!-- 5. VIBE -->
+    <section class="screen" id="s-vibe">
+      <div class="card">
+        <h1>QUAL É A VIBE? 🌼</h1>
+        <p class="sub" style="margin-top:12px">Escolhe a atividade ideal</p>
+        <div class="grid" id="vibeGrid"></div>
+        <button class="btn" id="btnVibe" disabled>ISSO PARECE LEGAL! 😎</button>
+      </div>
+    </section>
+
+    <!-- 6. FINAL -->
+    <section class="screen" id="s-final">
+      <div class="emoji">🌹</div>
+      <div class="card">
+        <p class="final-lead">TÔ CONTIGO, GATINHA. 💜</p>
+        <p class="final-sub">Fica pronta que eu vou te buscar 🚗</p>
+        <ul class="summary" id="summary"></ul>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+(() => {
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- floating hearts ---------- */
+  const layer = document.getElementById('hearts');
+  const HEART = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 32 30">
+    <defs><radialGradient id="g" cx="38%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#5a1a10"/><stop offset="45%" stop-color="#2c0a06"/>
+      <stop offset="100%" stop-color="#120403"/></radialGradient></defs>
+    <path d="M16 29C4 20 0 13 0 8 0 3 3 0 8 0c3 0 6 2 8 5 2-3 5-5 8-5 5 0 8 3 8 8 0 5-4 12-16 21z" fill="url(#g)"/>
+    <ellipse cx="11" cy="8" rx="3.4" ry="2.2" fill="rgba(255,255,255,.18)"/>
+  </svg>`;
+  function spawnHeart(){
+    const s = 14 + Math.random()*34;
+    const el = document.createElement('div');
+    el.className = 'heart';
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.setProperty('--sway', (Math.random()*80-40)+'px');
+    el.style.setProperty('--spin', (Math.random()*40-20)+'deg');
+    const dur = 7 + Math.random()*7;
+    el.style.animation = `floatUp ${dur}s linear forwards`;
+    el.innerHTML = HEART(s);
+    layer.appendChild(el);
+    setTimeout(()=>el.remove(), dur*1000+200);
+  }
+  if(!reduce){
+    for(let i=0;i<10;i++) setTimeout(spawnHeart, i*450);
+    setInterval(spawnHeart, 750);
+  } else { for(let i=0;i<6;i++) spawnHeart(); }
+
+  /* ---------- navigation ---------- */
+  const show = (id) => {
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  };
+  document.querySelectorAll('[data-next]').forEach(b =>
+    b.addEventListener('click', () => show(b.dataset.next)));
+
+  /* ---------- 1. runaway NÃO ---------- */
+  const nao = document.getElementById('btnNao');
+  let dodges = 0;
+  const sizes = ['18px','17px','15px','13px','11px'];
+  const phrases = ['NÃO','não?','tem certeza?','vai por mim','clica no SIM','😢'];
+  function dodge(){
+    const dx = (Math.random()*2-1) * 130;
+    const dy = (Math.random()*2-1) * 70 - 10;
+    nao.style.transform = `translate(${dx}px, ${dy}px)`;
+    dodges++;
+    nao.style.fontSize = sizes[Math.min(dodges, sizes.length-1)];
+    nao.textContent = phrases[Math.min(dodges, phrases.length-1)];
+  }
+  nao.addEventListener('mouseenter', dodge);
+  nao.addEventListener('touchstart', (e)=>{e.preventDefault();dodge();}, {passive:false});
+  nao.addEventListener('click', (e)=>{e.preventDefault();dodge();});
+  document.getElementById('btnSim').addEventListener('click', ()=>show('s-confirm'));
+
+  /* ---------- 3. when ---------- */
+  const inDate = document.getElementById('inDate');
+  const inTime = document.getElementById('inTime');
+  const btnWhen = document.getElementById('btnWhen');
+  const today = new Date(); today.setHours(0,0,0,0);
+  inDate.min = today.toISOString().split('T')[0];
+  const checkWhen = ()=> btnWhen.disabled = !(inDate.value && inTime.value);
+  inDate.addEventListener('change', checkWhen);
+  inTime.addEventListener('change', checkWhen);
+  btnWhen.addEventListener('click', ()=>show('s-food'));
+
+  /* ---------- 4 & 5. choice grids ---------- */
+  const state = { food:null, vibe:null };
+  const foods = [
+    ['🍔','Hambúrguer'],['🍣','Sushi'],['🍝','Massas'],
+    ['🌮','Tacos'],['🍕','Pizza']
+  ];
+  const vibes = [
+    ['⛳','Golfe'],['🚶','Caminhada'],['🎬','Cinema'],
+    ['💃','Dança'],['🎢','Parque'],['🏖️','Praia']
+  ];
+  function buildGrid(host, items, key, btn){
+    host.innerHTML = '';
+    items.forEach(([ico,name])=>{
+      const d = document.createElement('div');
+      d.className = 'opt';
+      d.innerHTML = `<span class="ico">${ico}</span><span class="name">${name}</span>`;
+      d.addEventListener('click', ()=>{
+        host.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel'));
+        d.classList.add('sel');
+        state[key] = {ico,name};
+        btn.disabled = false;
+      });
+      host.appendChild(d);
+    });
+  }
+  const btnFood = document.getElementById('btnFood');
+  const btnVibe = document.getElementById('btnVibe');
+  buildGrid(document.getElementById('foodGrid'), foods, 'food', btnFood);
+  buildGrid(document.getElementById('vibeGrid'), vibes, 'vibe', btnVibe);
+  btnFood.addEventListener('click', ()=>show('s-vibe'));
+
+  /* ---------- 6. final summary ---------- */
+  btnVibe.addEventListener('click', ()=>{
+    const [y,m,d] = inDate.value.split('-').map(Number);
+    const dateStr = new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'long',year:'numeric'})
+      .format(new Date(y, m-1, d));
+    document.getElementById('summary').innerHTML = `
+      <li><span class="e">📅</span><span>${dateStr}</span></li>
+      <li><span class="e">⏰</span><span>${inTime.value}</span></li>
+      <li><span class="e">🍽️</span><span>${state.food.ico} ${state.food.name}</span></li>
+      <li><span class="e">✨</span><span>${state.vibe.ico} ${state.vibe.name}</span></li>`;
+    show('s-final');
+  });
+})();
+</script>
+</body>
+</html>
